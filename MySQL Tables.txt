@@ -1,0 +1,41 @@
+CREATE TABLE `tbl_stock` (
+  `Product_ID` varchar(6) NOT NULL,
+  `Product_Name` varchar(20) DEFAULT NULL,
+  `Product_Unit_Price` decimal(11,2) DEFAULT NULL,
+  `Reorder_Level` bigint DEFAULT NULL,
+  PRIMARY KEY (`Product_ID`),
+  UNIQUE KEY `UQ01` (`Product_Name`),
+  CONSTRAINT `CH03` CHECK ((`Product_Unit_Price` >= 0)),
+  CONSTRAINT `CH04` CHECK ((`Reorder_Level` >= 0))
+)
+
+
+
+
+CREATE TABLE `tbl_sales` (
+  `Sales_ID` varchar(6) NOT NULL,
+  `Sales_Date` datetime DEFAULT NULL,
+  `Product_ID` varchar(6) DEFAULT NULL,
+  `Quantity_Sold` bigint DEFAULT NULL,
+  `Sales_Price_Per_Unit` decimal(11,2) DEFAULT NULL,
+  PRIMARY KEY (`Sales_ID`),
+  KEY `FK11` (`Product_ID`),
+  CONSTRAINT `FK11` FOREIGN KEY (`Product_ID`) REFERENCES `tbl_stock` (`Product_ID`),
+  CONSTRAINT `CH12` CHECK ((`Quantity_Sold` >= 0)),
+  CONSTRAINT `CH13` CHECK ((`Sales_Price_Per_Unit` >= 0))
+)
+
+
+
+
+CREATE TABLE `tbl_quantity` (
+  `Product_ID` varchar(6) NOT NULL,
+  `Quantity_On_Hand` bigint DEFAULT NULL,
+  PRIMARY KEY (`Product_ID`),
+  CONSTRAINT `tbl_quantity_ibfk_1` FOREIGN KEY (`Product_ID`) REFERENCES `tbl_stock` (`Product_ID`),
+  CONSTRAINT `tbl_quantity_ibfk_2` FOREIGN KEY (`Product_ID`) REFERENCES `tbl_stock` (`Product_ID`)
+)
+
+
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_sales_report` AS select `tbl_sales`.`Sales_ID` AS `Sales_ID`,`tbl_sales`.`Sales_Date` AS `Sales_Date`,`tbl_stock`.`Product_ID` AS `Product_ID`,`tbl_stock`.`Product_Name` AS `Product_Name`,`tbl_sales`.`Quantity_Sold` AS `Quantity_Sold`,`tbl_stock`.`Product_Unit_Price` AS `Product_Unit_Price`,`tbl_sales`.`Sales_Price_Per_Unit` AS `Sales_Price_Per_Unit`,((`tbl_sales`.`Sales_Price_Per_Unit` - `tbl_stock`.`Product_Unit_Price`) * `tbl_sales`.`Quantity_Sold`) AS `Profit_Amount` from (`tbl_stock` join `tbl_sales` on((`tbl_stock`.`Product_ID` = `tbl_sales`.`Product_ID`))) order by ((`tbl_sales`.`Sales_Price_Per_Unit` - `tbl_stock`.`Product_Unit_Price`) * `tbl_sales`.`Quantity_Sold`) desc,`tbl_sales`.`Sales_ID`
